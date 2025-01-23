@@ -1,0 +1,184 @@
+---
+title: "Exploratory Data Analysis (EDA)"
+author: "J Andres Gannon"
+date: "January 25, 2025"
+date-format: long
+format:
+ revealjs:
+  slide-number: c
+  show-slide-number: print
+  preview-links: true
+  embed-resources: true
+  scrollable: true
+  echo: true
+  fig-align: center
+editor: visual
+---
+
+## Types of data science
+
+![](images/clipboard-769021543.png){fig-align="center"}
+
+## Purpose of EDA
+
+1.  Communicate - present data and explain and inform with evidence
+
+2.  Analyze - explore data to assess a situation and determine how to proceed
+
+Descriptive statistics do this by identifying:
+
+-   Kinds of values
+
+-   Outliers (possibly incorrect)
+
+-   Distribution (possibly skewed)
+
+## Two basic EDA principles
+
+1.  Making a simpler description possible is good
+
+2.  Looking one level below an existing description is good
+
+![](https://media.istockphoto.com/id/178366909/photo/silhouette-of-man-smoking-a-cigar-holding-a-magnifying-glass.jpg?s=612x612&w=0&k=20&c=hvJtDysdO__Ph1LouEUxPtm-RYvquUogUcTfiNsH1mE=){fig-align="center" width="285"}
+
+So we shall always be glad (a) to simplify description and (b) to describe one layer deeper.
+
+## Where exploratory data analysis fits in
+
+![](https://davpy.netlify.app/_images/tidy-model.svg){fig-align="center"}
+
+## Where exploratory data analysis fits in (reality)
+
+![](https://sinarueeger.github.io/robust-data-analysis-with-r/img/workflow/workflow.003.jpeg){fig-align="center" width="462"}
+
+Understand data via single variable, pair of variables, or dimensionality reduction
+
+Organizes the data, spots problems, and identifies modeling strategies
+
+## How to describe a dataset
+
+## Key descriptive statistics
+
+```{python}
+import pandas as pd
+import numpy as np
+df = pd.read_csv("https://github.com/nlihin/data-analytics/raw/main/datasets/italy-covid-daywise.csv")
+df.describe()
+```
+
+## Key descriptive statistics
+
+Low variance means values close to the mean
+
+```{python}
+df.var(numeric_only = True)
+```
+
+Skewness is symmetry of the data. Positive skew indicates large outliers. Negative skew indicates small outliers
+
+```{python}
+df.skew(numeric_only = True)
+```
+
+## Descriptive statistics can mislead
+
+```{python}
+datasaurus_data = pd.read_csv('./data/datasaurus.csv')
+datasaurus_data.groupby('dataset').agg({'x': ['count','mean', 'std'],'y': ['count','mean', 'std']})
+```
+
+## Descriptive statistics can mislead
+
+```{python}
+import seaborn as sns
+sns.relplot(data=datasaurus_data, x='x', y='y', col='dataset', col_wrap=4)
+```
+
+## Trust nothing and no one
+
+![](images/clipboard-4072771428.png){fig-align="center"}
+
+## Why missingness happens
+
+Column values missing
+
+-   Subject-created: opt out, unknown value
+-   Record-created: entry, software, or coding errors
+
+## No universal solution, but many wrong ones
+
+![](images/clipboard-1216816370.png){fig-align="center"}
+
+## Computational strategies
+
+Guiding questions
+
+-   How much missingness is present
+
+-   Is missing value in response variable or predictor variable
+
+-   Is missing value quantitative or categorical
+
+-   Specifying allowed NA values when reading in data
+
+-   Look for nonsense values (outlier check)
+
+-   Missingness when joining/merging
+
+## Mean Imputation
+
+```{python}
+#| echo: true
+df = pd.read_csv("./data/titanic.csv")
+df = df[["PassengerId", "Survived", "Name", "Sex", "Age", "Class"]]
+
+# Mean imputate for numeric
+df_imputed = df
+df_imputed['Age'] = df_imputed['Age'].fillna(df_imputed['Age'].mean())
+df_imputed.info()
+```
+
+## Multiple Imputation: Random Sample
+
+Replace each missing value with a random value from that column
+
+```{python}
+#| echo: true
+df = pd.read_csv("./data/titanic.csv")
+df = df[["PassengerId", "Survived", "Name", "Sex", "Age", "Class"]]
+
+df['Age'].dropna().sample()
+```
+
+## Multiple Imputation: k-nearest neighbor
+
+K-nearest neighbor: impute from rows that most closely match based on non-missing variables
+
+**Requires numeric columns and normalization**
+
+```{python}
+#| echo: true
+from sklearn.impute import KNNImputer
+
+df = pd.read_csv("./data/titanic.csv")
+df = df[["PassengerId", "Survived", "Age", "Class"]]
+
+imp = KNNImputer(n_neighbors = 2, weights = "uniform")
+df = pd.DataFrame(imp.fit_transform(df), columns = df.columns)
+
+df.info()
+```
+
+## EDA can seem mundane... {auto-animate="true"}
+
+::: {layout-ncol="3"}
+![90% cleaning and documentation](https://poorlydrawnlines.com/wp-content/uploads/2018/05/report.png){width="272"}
+
+![9% existing off the shelf tools](https://preview.redd.it/xy0ora877uk31.png?auto=webp&s=fe3e32d8243dc88cab87dae95b30c917d917b2fa){width="265"}
+
+![1% cutting edge](https://imgs.xkcd.com/comics/machine_learning.png){width="295"}
+:::
+
+## ...but it's the foundation of everything else
+
+![State of the art (pun intended)](images/clipboard-450813341.png){fig-align="center"}
